@@ -8,7 +8,17 @@ const wrappers = fs
 	.map((filename) => ({
 		name: path.basename(filename, '.js'),
 		parser: path.join(__dirname, 'wrapper', filename),
-	}));
+	}))
+	.filter(
+		({ name }) =>
+			name.includes('htmljs-parser') ||
+			name.includes('streaming') ||
+			name.includes('tl') ||
+			name.includes('htmlparser2') ||
+			name.includes('neutron-html5parser') ||
+			name.includes('html5parser') ||
+			name.includes('node-html-parser'),
+	);
 
 const MAX_WIDTH = Math.max(...wrappers.map((wrapper) => wrapper.name.length));
 
