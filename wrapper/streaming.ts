@@ -66,7 +66,7 @@ function isVoidElement(name: string): boolean {
 	);
 }
 
-type ParseChunk = (chunk: Buffer) => number;
+type ParseChunk = (chunk: string) => number;
 
 function createParser(
 	handleOpenTag: (name: string) => boolean,
@@ -75,14 +75,14 @@ function createParser(
 	let state: number = TEXT;
 	let name: string = '';
 
-	return function parseChunk(chunk: Buffer) {
+	return function parseChunk(chunk: string): number {
 		let shouldPause = false;
 		let i = 0;
 		let char = 0;
 		let chunkLength = chunk.length;
 
 		while (i < chunkLength) {
-			char = chunk[i];
+			char = chunk.charCodeAt(i);
 
 			switch (state) {
 				case TEXT:
