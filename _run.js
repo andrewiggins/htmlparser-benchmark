@@ -2,10 +2,11 @@ const Benchmark = require('./index.js');
 const ProgressBar = require('progress');
 
 process.on('uncaughtException', (e) => {
+	console.error(e);
 	process.exit(1);
 });
 
-process.on('message', (item) => {
+process.on('message', async (item) => {
 	const bar = new ProgressBar('[:bar] :current / :total', {
 		total: Benchmark.TOTAL,
 		complete: '=',
@@ -13,8 +14,8 @@ process.on('message', (item) => {
 		width: 50,
 	});
 
-	const parser = require(item.parser);
-	const bench = new Benchmark(parser);
+	const parser = await import(item.parser);
+	const bench = new Benchmark(parser.default);
 
 	bench.on('progress', () => {
 		bar.tick();

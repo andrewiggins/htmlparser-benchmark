@@ -68,12 +68,12 @@ function isVoidElement(name: string): boolean {
 
 type ParseChunk = (chunk: string) => number;
 
-function createParser(
+export function createParser(
 	handleOpenTag: (name: string) => boolean,
 	handleCloseTag: (name: string) => boolean,
 ): ParseChunk {
 	let state: number = TEXT;
-	// let name: string = '';
+	let name: string = '';
 
 	return function parseChunk(chunk: string): number {
 		let shouldPause = false;
@@ -95,11 +95,11 @@ function createParser(
 						(char >= CAPITAL_A && char <= CAPITAL_Z) ||
 						(char >= LOWERCASE_A && char <= LOWERCASE_Z)
 					) {
-						// name = String.fromCharCode(char | 0x20); // Lowercase
+						name = String.fromCharCode(char | 0x20); // Lowercase
 						state = OPENING_TAG; // <name
 					} else if (char === SLASH) {
 						state = CLOSING_TAG; // </name
-						// name = '';
+						name = '';
 					} else if (char === START_NODE) {
 						state = BEFORE_OPEN_TAG; // << - Treat the first '<' as text
 					} else if (char === EXCLAMATION) {
@@ -116,24 +116,24 @@ function createParser(
 					} else if (char === CLOSE_NODE) {
 						state = TEXT; // <name>
 
-						// shouldPause = isVoidElement(name)
-						// 	? handleCloseTag(name)
-						// 	: handleOpenTag(name);
-						// name = '';
+						shouldPause = isVoidElement(name)
+							? handleCloseTag(name)
+							: handleOpenTag(name);
+						name = '';
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <name/
 					} else {
-						// name += String.fromCharCode(char | 0x20); // Lowercase
+						name += String.fromCharCode(char | 0x20); // Lowercase
 					}
 					break;
 				case AFTER_OPENING_TAG:
 					if (char === CLOSE_NODE) {
 						state = TEXT; // <name   >
 
-						// shouldPause = isVoidElement(name)
-						// 	? handleCloseTag(name)
-						// 	: handleOpenTag(name);
-						// name = '';
+						shouldPause = isVoidElement(name)
+							? handleCloseTag(name)
+							: handleOpenTag(name);
+						name = '';
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <name   /
 					} else if (char === SINGLE_QUOTE) {
@@ -148,10 +148,10 @@ function createParser(
 					if (char === CLOSE_NODE) {
 						state = TEXT; // <div xxx>
 
-						// shouldPause = isVoidElement(name)
-						// 	? handleCloseTag(name)
-						// 	: handleOpenTag(name);
-						// name = '';
+						shouldPause = isVoidElement(name)
+							? handleCloseTag(name)
+							: handleOpenTag(name);
+						name = '';
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <div xxx/
 					} else if (char === EQUAL) {
@@ -174,8 +174,8 @@ function createParser(
 					if (char === CLOSE_NODE) {
 						state = TEXT; // <name />
 
-						// shouldPause = handleCloseTag(name);
-						// name = '';
+						shouldPause = handleCloseTag(name);
+						name = '';
 					} else {
 						state = AFTER_OPENING_TAG; // <name /...>
 						i--; // Re-process the character
@@ -186,14 +186,24 @@ function createParser(
 						state = OPENING_NORMAL_COMMENT; // <!-
 					} else if (char === CAPITAL_D || char === LOWERCASE_D) {
 						state = OPENING_DOCTYPE; // <!D
-						// name = String.fromCharCode(char | 0x20); // Lowercase
+						name = String.fromCharCode(char | 0x20); // Lowercase
 					} else {
 						state = IN_SHORT_COMMENT; // <!...
 					}
 					break;
 				case OPENING_DOCTYPE:
-					if (CLOSE_NODE) {
+					if (isWhitespace(char)) {
+						if (name === 'doctype') {
+							state = AFTER_OPENING_TAG; // <!DOCTYPE ...
+						} else {
+							state = IN_SHORT_COMMENT; // <!DOCXX...
+						}
+						// Validate the doctype and go to after open tag
+						// otherwise, ???
+					} else if (CLOSE_NODE) {
 						state = TEXT; // <!DOCTYPE> or <!DOCT>
+					} else {
+						name += String.fromCharCode(char | 0x20); // Lowercase
 					}
 					break;
 				case OPENING_NORMAL_COMMENT:
@@ -242,10 +252,10 @@ function createParser(
 					if (char === CLOSE_NODE) {
 						state = TEXT; // </name>
 
-						// shouldPause = handleCloseTag(name);
-						// name = '';
+						shouldPause = handleCloseTag(name);
+						name = '';
 					} else {
-						// name += String.fromCharCode(char | 0x20); // Lowercase
+						name += String.fromCharCode(char | 0x20); // Lowercase
 					}
 					break;
 				default:
@@ -264,8 +274,8 @@ function createParser(
 }
 
 const noop = () => false;
-module.exports = function (html, callback) {
+export default function (html, callback) {
 	const parseChunk = createParser(noop, noop);
 	parseChunk(html);
 	callback();
-};
+}
