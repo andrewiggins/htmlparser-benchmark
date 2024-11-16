@@ -1,0 +1,17 @@
+htmljs-parser      : 0.326404 ms/file ± 0.681366
+streaming.ts       : 0.427529 ms/file ± 0.249066
+tl                 : 0.484369 ms/file ± 0.300681
+htmlparser2        : 0.835902 ms/file ± 0.824519
+neutron-html5parser: 0.931029 ms/file ± 0.503045
+html5parser        : 0.949073 ms/file ± 0.744814
+htmlparser2-dom    : 1.07041 ms/file ± 0.917851
+node-html-parser   : 1.08806 ms/file ± 0.693317
+zeed-dom           : 1.76499 ms/file ± 1.19751
+sax                : 3.02667 ms/file ± 3.22327
+parse5             : 3.03813 ms/file ± 2.55981
+arijs-stream       : 6.92420 ms/file ± 4.33435
+arijs-tree         : 7.50523 ms/file ± 4.52889
+html-parser        : 13.0133 ms/file ± 10.2288
+htmlparser         : 19.1080 ms/file ± 150.851
+saxes              : 30.5220 ms/file ± 87.3298
+html5              : 62.0790 ms/file ± 83.3730
