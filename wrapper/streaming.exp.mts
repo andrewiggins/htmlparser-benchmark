@@ -69,8 +69,8 @@ function isVoidElement(name: string): boolean {
 type ParseChunk = (chunk: string) => number;
 
 export function createParser(
-	handleOpenTag: (name: string) => boolean,
-	handleCloseTag: (name: string) => boolean,
+	handleOpenTag: () => boolean,
+	handleCloseTag: () => boolean,
 ): ParseChunk {
 	let state: number = TEXT;
 	// let name: string = '';
@@ -120,6 +120,7 @@ export function createParser(
 						// 	? handleCloseTag(name)
 						// 	: handleOpenTag(name);
 						// name = '';
+						handleOpenTag();
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <name/
 					} else {
@@ -134,6 +135,7 @@ export function createParser(
 						// 	? handleCloseTag(name)
 						// 	: handleOpenTag(name);
 						// name = '';
+						handleOpenTag();
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <name   /
 					} else if (char === SINGLE_QUOTE) {
@@ -152,6 +154,7 @@ export function createParser(
 						// 	? handleCloseTag(name)
 						// 	: handleOpenTag(name);
 						// name = '';
+						handleOpenTag();
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <div xxx/
 					} else if (char === EQUAL) {
@@ -263,9 +266,17 @@ export function createParser(
 	};
 }
 
-const noop = () => false;
 export default function (html, callback) {
-	const parseChunk = createParser(noop, noop);
+	let count = 0;
+
+	const parseChunk = createParser(
+		() => {
+			count++;
+			return false;
+		},
+		() => false,
+	);
 	parseChunk(html);
-	callback();
+
+	callback(null, count);
 }

@@ -273,9 +273,17 @@ export function createParser(
 	};
 }
 
-const noop = () => false;
 export default function (html, callback) {
-	const parseChunk = createParser(noop, noop);
+	let count = 0;
+
+	const parseChunk = createParser(
+		() => {
+			count++;
+			return false;
+		},
+		() => false,
+	);
 	parseChunk(html);
-	callback();
+
+	callback(null, count);
 }
