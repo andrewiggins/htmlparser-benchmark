@@ -1,0 +1,9 @@
+htmljs-parser       : 0.273028 ms/file ± 0.586381
+tl                  : 0.491112 ms/file ± 0.314757
+streaming.exp.ts    : 0.492894 ms/file ± 0.356529
+streaming.control.ts: 0.538685 ms/file ± 0.427369
+htmlparser2         : 0.839157 ms/file ± 0.802838
+neutron-html5parser : 0.902334 ms/file ± 0.481889
+html5parser         : 0.954932 ms/file ± 0.770010
+node-html-parser    : 1.05371 ms/file ± 0.673567
+htmlparser2-dom     : 1.16736 ms/file ± 1.06259
