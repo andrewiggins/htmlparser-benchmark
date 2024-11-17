@@ -1,11 +1,11 @@
 const HTMLtoDOM = require('neutron-html5parser')();
 
 module.exports = function (html, callback) {
-	let count = 0;
+	const names = [];
 	const noop = function () {};
 	HTMLtoDOM.Parser(html, {
-		start() {
-			count++;
+		start(tagName) {
+			names.push(tagName);
 		},
 		end: noop,
 		chars: noop,
@@ -13,5 +13,5 @@ module.exports = function (html, callback) {
 		doctype: noop,
 	});
 
-	callback(null, count);
+	callback(null, names);
 };

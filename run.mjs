@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const wrappers = fs
@@ -16,7 +16,8 @@ const wrappers = fs
 			name === 'htmlparser2' ||
 			name === 'neutron-html5parser' ||
 			name === 'html5parser' ||
-			name === 'node-html-parser',
+			name === 'node-html-parser' ||
+			name === 'parse5',
 	);
 
 const html = fs.readFileSync(
@@ -27,26 +28,43 @@ const html = fs.readFileSync(
 	'utf8',
 );
 
-/** @type {Array<{name: string; count: number; time: number; }>} */
+/**
+ * @typedef {{name: string; tagNames: string[]; time: number; }} Result
+ * @type {Result[]}
+ */
 const results = [];
 for (const { name, parser } of wrappers) {
 	const m = await import(parser);
 
+	/** @type {Result} */
 	const result = await new Promise(async (resolve, reject) => {
 		const tic = process.hrtime();
-		m.default(html, (err, count) => {
+		m.default(html, (err, tagNames) => {
 			const toc = process.hrtime(tic);
 
-			if (err) reject(err);
-			count = typeof count === 'number' ? count : undefined;
-			resolve({ name, count, time: toc[0] * 1e3 + toc[1] / 1e6 });
+			if (err) {
+				reject(err);
+			} else {
+				resolve({
+					name,
+					tagNames,
+					time: toc[0] * 1e3 + toc[1] / 1e6,
+				});
+			}
 		});
 	});
 
 	results.push(result);
 }
 
+fs.mkdirSync(path.join(__dirname, 'results'), { recursive: true });
+
 results.sort((a, b) => a.time - b.time);
-for (const { name, count, time } of results) {
-	console.log(`${name}: ${count} (${time}ms)`);
+for (const { name, tagNames, time } of results) {
+	fs.writeFileSync(
+		path.join(__dirname, 'results', `${name}.txt`),
+		`[\n${tagNames?.join(',\n') ?? ''}\n]`,
+		'utf8',
+	);
+	console.log(`${name}: ${tagNames?.length} (${time}ms)`);
 }

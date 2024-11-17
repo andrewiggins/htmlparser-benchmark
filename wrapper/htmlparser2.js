@@ -1,13 +1,13 @@
 const { Parser } = require('htmlparser2');
 
 module.exports = function (html, callback) {
-	let count = 0;
+	const names = [];
 	const parser = new Parser({
-		onopentag() {
-			count++;
+		onopentag(name) {
+			names.push(name);
 		},
 		onend() {
-			callback(null, count);
+			callback(null, names);
 		},
 		onerror(err) {
 			callback(err);

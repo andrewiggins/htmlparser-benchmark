@@ -274,16 +274,16 @@ export function createParser(
 }
 
 export default function (html, callback) {
-	let count = 0;
+	const names: string[] = [];
 
 	const parseChunk = createParser(
-		() => {
-			count++;
+		(name) => {
+			names.push(name);
 			return false;
 		},
 		() => false,
 	);
 	parseChunk(html);
 
-	callback(null, count);
+	callback(null, names);
 }

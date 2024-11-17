@@ -6,14 +6,13 @@ tljs.initializeWasmSync();
 module.exports = function (html, callback) {
 	tljs.parse(html).then(
 		(dom) => {
-			let count = 0;
+			let names = [];
 			for (let node of dom.nodes()) {
-				if (node.asTag()?.name) {
-					count++;
-				}
+				const name = node.asTag()?.name?.();
+				if (name) names.push(name);
 			}
 
-			callback(null, count);
+			callback(null, names);
 		},
 		(error) => {
 			callback(error);
