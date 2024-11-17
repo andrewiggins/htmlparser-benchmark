@@ -20,6 +20,10 @@ function getNodes(node, names = []) {
 					getNodes(parse5.parseFragment(textNode.value), names);
 				}
 			}
+
+			if ('content' in child) {
+				getNodes(child.content, names);
+			}
 		}
 
 		if ('childNodes' in child) {

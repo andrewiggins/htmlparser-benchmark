@@ -11,7 +11,7 @@ const wrappers = fs
 	}))
 	.filter(
 		({ name }) =>
-			name.includes('htmljs-parser') ||
+			// name.includes('htmljs-parser') ||
 			name.includes('streaming') ||
 			name.includes('tl') ||
 			name.includes('htmlparser2') ||
