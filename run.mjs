@@ -10,7 +10,7 @@ const wrappers = fs
 	}))
 	.filter(
 		({ name }) =>
-			name === 'htmljs-parser' ||
+			// name === 'htmljs-parser' || // Doesn't parse the entire file eagerly
 			name.includes('streaming') ||
 			name === 'tl' ||
 			name === 'htmlparser2' ||
