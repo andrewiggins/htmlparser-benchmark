@@ -54,4 +54,5 @@ class Benchmark extends events.EventEmitter {
 module.exports = Benchmark;
 
 // The total amount of files
+Benchmark.FILES = FILES;
 Benchmark.TOTAL = FILES.length;

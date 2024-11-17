@@ -5,7 +5,7 @@ module.exports = function (html, callback) {
 	const noop = function () {};
 	HTMLtoDOM.Parser(html, {
 		start(tagName) {
-			names.push(tagName);
+			names.push(tagName.toLowerCase());
 		},
 		end: noop,
 		chars: noop,

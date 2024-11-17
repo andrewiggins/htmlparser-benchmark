@@ -9,7 +9,7 @@ module.exports = function (html, callback) {
 			let names = [];
 			for (let node of dom.nodes()) {
 				const name = node.asTag()?.name?.();
-				if (name) names.push(name);
+				if (name) names.push(name.toLowerCase());
 			}
 
 			callback(null, names);

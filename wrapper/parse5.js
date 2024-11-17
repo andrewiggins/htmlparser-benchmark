@@ -12,7 +12,14 @@ module.exports = function (html, callback) {
 function getNodes(node, names = []) {
 	for (const child of node.childNodes) {
 		if ('tagName' in child) {
-			names.push(child.tagName);
+			names.push(child.tagName.toLowerCase());
+
+			if (child.tagName === 'noscript' && child.childNodes.length) {
+				const textNode = child.childNodes[0];
+				if ('value' in textNode) {
+					getNodes(parse5.parseFragment(textNode.value), names);
+				}
+			}
 		}
 
 		if ('childNodes' in child) {

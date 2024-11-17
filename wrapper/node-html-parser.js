@@ -9,7 +9,7 @@ module.exports = function (html, callback) {
 function getNodes(element, names = []) {
 	for (const child of element.childNodes) {
 		if (child.nodeType === 1 /* ELEMENT_NODE */) {
-			names.push(child.rawTagName);
+			names.push(child.rawTagName.toLowerCase());
 		}
 
 		getNodes(child, names);

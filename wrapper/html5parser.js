@@ -13,7 +13,7 @@ function getNodes(nodes, names = []) {
 			node.name !== '!doctype' &&
 			!node.name.startsWith('!')
 		) {
-			names.push(node.name);
+			names.push(node.name.toLowerCase());
 
 			if (node.body) {
 				getNodes(node.body, names);

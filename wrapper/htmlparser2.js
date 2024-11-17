@@ -4,7 +4,7 @@ module.exports = function (html, callback) {
 	const names = [];
 	const parser = new Parser({
 		onopentag(name) {
-			names.push(name);
+			names.push(name.toLowerCase());
 		},
 		onend() {
 			callback(null, names);

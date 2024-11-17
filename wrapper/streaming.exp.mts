@@ -34,7 +34,16 @@ const CAPITAL_A = 65; // A
 const CAPITAL_D = 68; // D
 const CAPITAL_Z = 90; // Z
 const LOWERCASE_A = 97; // a
+const LOWERCASE_C = 99; // c
 const LOWERCASE_D = 100; // d
+const LOWERCASE_E = 101; // e
+const LOWERCASE_I = 105; // i
+const LOWERCASE_L = 108; // l
+const LOWERCASE_P = 112; // p
+const LOWERCASE_R = 114; // r
+const LOWERCASE_S = 115; // s
+const LOWERCASE_T = 116; // t
+const LOWERCASE_Y = 121; // y
 const LOWERCASE_Z = 122; // z
 
 const isWhitespace = (c: number) =>
@@ -74,6 +83,45 @@ export function createParser(
 ): ParseChunk {
 	let state: number = TEXT;
 	let name: string = '';
+	let inScriptOrStyle: string | null = null;
+
+	function emitOpenTag(name: string, isSelfClosing: boolean) {
+		let shouldPause = handleOpenTag(name);
+		if (name === 'script' || name === 'style') {
+			inScriptOrStyle = name;
+		}
+
+		if (isSelfClosing || isVoidElement(name)) {
+			shouldPause ||= handleCloseTag();
+			inScriptOrStyle = null;
+		}
+
+		return shouldPause;
+	}
+
+	function possiblyClosesScriptOrStyle(char: number) {
+		char |= 0x20; // Lowercase
+		if (inScriptOrStyle == 'script') {
+			return (
+				char === LOWERCASE_S ||
+				char === LOWERCASE_C ||
+				char === LOWERCASE_R ||
+				char === LOWERCASE_I ||
+				char === LOWERCASE_P ||
+				char === LOWERCASE_T
+			);
+		} else if (inScriptOrStyle == 'style') {
+			return (
+				char === LOWERCASE_S ||
+				char === LOWERCASE_T ||
+				char === LOWERCASE_Y ||
+				char === LOWERCASE_L ||
+				char === LOWERCASE_E
+			);
+		}
+
+		return false;
+	}
 
 	return function parseChunk(chunk: string): number {
 		// let shouldPause = false;
@@ -91,10 +139,18 @@ export function createParser(
 					}
 					break;
 				case BEFORE_OPEN_TAG:
-					if (
+					if (inScriptOrStyle) {
+						if (char === SLASH) {
+							state = CLOSING_TAG; // </ - Possible closing tag for the script or style tag
+							name = '';
+						} else {
+							state = TEXT; // < - Not a closing tag, go back to text
+						}
+					} else if (
 						(char >= CAPITAL_A && char <= CAPITAL_Z) ||
 						(char >= LOWERCASE_A && char <= LOWERCASE_Z)
 					) {
+						// Only A-Z and a-z are valid start to tag names in HTML5
 						name = String.fromCharCode(char | 0x20); // Lowercase
 						state = OPENING_TAG; // <name
 					} else if (char === SLASH) {
@@ -116,10 +172,8 @@ export function createParser(
 					} else if (char === CLOSE_NODE) {
 						state = TEXT; // <name>
 
-						// shouldPause = isVoidElement(name)
-						// 	? handleCloseTag(name)
-						// 	: handleOpenTag(name);
-						handleOpenTag(name);
+						// shouldPause = emitOpenTag(name, false);
+						emitOpenTag(name, false);
 						name = '';
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <name/
@@ -131,10 +185,8 @@ export function createParser(
 					if (char === CLOSE_NODE) {
 						state = TEXT; // <name   >
 
-						// shouldPause = isVoidElement(name)
-						// 	? handleCloseTag(name)
-						// 	: handleOpenTag(name);
-						handleOpenTag(name);
+						// shouldPause = emitOpenTag(name, false);
+						emitOpenTag(name, false);
 						name = '';
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <name   /
@@ -150,10 +202,8 @@ export function createParser(
 					if (char === CLOSE_NODE) {
 						state = TEXT; // <div xxx>
 
-						// shouldPause = isVoidElement(name)
-						// 	? handleCloseTag(name)
-						// 	: handleOpenTag(name);
-						handleOpenTag(name);
+						// shouldPause = emitOpenTag(name, false);
+						emitOpenTag(name, false);
 						name = '';
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <div xxx/
@@ -177,8 +227,8 @@ export function createParser(
 					if (char === CLOSE_NODE) {
 						state = TEXT; // <name />
 
-						handleOpenTag(name);
-						// shouldPause = handleCloseTag(name);
+						// shouldPause = emitOpenTag(name, true);
+						emitOpenTag(name, true);
 						name = '';
 					} else {
 						state = AFTER_OPENING_TAG; // <name /...>
@@ -243,7 +293,26 @@ export function createParser(
 					}
 					break;
 				case CLOSING_TAG:
-					if (char === CLOSE_NODE) {
+					if (inScriptOrStyle) {
+						if (char === START_NODE) {
+							state = BEFORE_OPEN_TAG; // </< - First `</` wasn't a closing tag, but this next `<` could be
+						} else if (char === CLOSE_NODE) {
+							// Check if the closing tag is for the script or style tag
+							if (name === inScriptOrStyle) {
+								state = TEXT; // </script>
+
+								// shouldPause = handleCloseTag(name);
+								name = '';
+								inScriptOrStyle = null;
+							} else {
+								state = TEXT; // </name> but not for the script or style tag
+							}
+						} else if (possiblyClosesScriptOrStyle(char)) {
+							name += String.fromCharCode(char | 0x20); // Lowercase
+						} else {
+							state = TEXT; // </scrXXX or </styXXX
+						}
+					} else if (char === CLOSE_NODE) {
 						state = TEXT; // </name>
 
 						// shouldPause = handleCloseTag(name);
