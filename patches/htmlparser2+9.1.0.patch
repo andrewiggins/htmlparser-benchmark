@@ -1,0 +1,21 @@
+diff --git a/node_modules/htmlparser2/package.json b/node_modules/htmlparser2/package.json
+index 708f6a4..497c847 100644
+--- a/node_modules/htmlparser2/package.json
++++ b/node_modules/htmlparser2/package.json
+@@ -32,16 +32,6 @@
+     "main": "lib/index.js",
+     "types": "lib/index.d.ts",
+     "module": "lib/esm/index.js",
+-    "exports": {
+-        ".": {
+-            "require": "./lib/index.js",
+-            "import": "./lib/esm/index.js"
+-        },
+-        "./lib/WritableStream": {
+-            "require": "./lib/WritableStream.js",
+-            "import": "./lib/esm/WritableStream.js"
+-        }
+-    },
+     "files": [
+         "lib/**/*"
+     ],

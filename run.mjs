@@ -5,25 +5,25 @@ import Benchmark from './index.js';
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const p = (...args) => path.join(__dirname, ...args);
 
+const parsers = [
+	// 'htmljs-parser', // Doesn't parse the entire file eagerly
+	'streaming.exp.mts',
+	// 'tl', // Has parsing bugs such as <script>'<strong>'</script>
+	// 'htmlparser2', // Applies some HTML semantics to the document (e.g. nested <p> tags are fixed up)
+	'htmlparser2-tokenizer',
+	// 'neutron-html5parser', // Fails to parse <a onclick=""OnClick=""> and other attribute parsing issues
+	// 'html5parser', // Fails to skip over textarea content
+	// 'node-html-parser', // Messed up badly on 0475e5eeadaaca857eea3f36d0eda01937fe672d48be7f98ba6bc7f25ecd63d0
+	// 'parse5', // Applies HTML semantics to the document and inserts spec-required elements
+];
+
 const wrappers = fs
 	.readdirSync(path.join(__dirname, 'wrapper'))
 	.map((filename) => ({
 		name: path.basename(filename, '.js'),
 		parser: path.join(__dirname, 'wrapper', filename),
 	}))
-	.filter(
-		({ name }) =>
-			// name === 'htmljs-parser' || // Doesn't parse the entire file eagerly
-			// name.includes('streaming') ||
-			name === 'streaming.exp.mts' ||
-			// name === 'tl' || // Has parsing bugs such as <script>'<strong>'</script>
-			// name === 'htmlparser2' || // Applies some HTML semantics to the document (e.g. nested <p> tags are fixed up)
-			name === 'htmlparser2-tokenizer' ||
-			name === 'neutron-html5parser' || // Fails to parse <a onclick=""OnClick=""> correctly
-			name === 'html5parser',
-		// name === 'node-html-parser' || // Messed up badly on 0475e5eeadaaca857eea3f36d0eda01937fe672d48be7f98ba6bc7f25ecd63d0
-		// name === 'parse5', // Applies HTML semantics to the document and inserts spec-required elements
-	);
+	.filter(({ name }) => parsers.includes(name));
 
 const FILES = Benchmark.FILES;
 // const FILES = [

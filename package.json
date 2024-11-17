@@ -5,7 +5,8 @@
 	"author": "Andreas Madsen <amwebdk@gmail.com>",
 	"main": "./index.js",
 	"scripts": {
-		"test": "node --experimental-strip-types execute.js"
+		"test": "node --experimental-strip-types execute.js",
+		"postinstall": "patch-package"
 	},
 	"repository": {
 		"type": "git",
@@ -21,6 +22,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^22.9.0",
+		"patch-package": "^8.0.0",
 		"progress": "^2.0.3"
 	},
 	"optionalDependencies": {

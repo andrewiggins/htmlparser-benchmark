@@ -2,20 +2,22 @@
 const TEXT = 0;
 const BEFORE_OPEN_TAG = 1;
 const OPENING_TAG = 2;
-const AFTER_OPENING_TAG = 3;
-const IN_VALUE_NO_QUOTES = 4;
-const IN_VALUE_SINGLE_QUOTES = 5;
-const IN_VALUE_DOUBLE_QUOTES = 6;
-const CLOSING_OPEN_TAG = 7;
-const OPENING_SPECIAL = 8;
-const OPENING_DOCTYPE = 9;
-const OPENING_NORMAL_COMMENT = 10;
-const NORMAL_COMMENT_START = 11;
-const IN_NORMAL_COMMENT = 12;
-const IN_SHORT_COMMENT = 13;
-const CLOSING_NORMAL_COMMENT = 14;
-const CLOSING_NORMAL_COMMENT_2 = 15;
-const CLOSING_TAG = 16;
+const BEFORE_ATTRIBUTE_NAME = 3;
+const IN_ATTRIBUTE_NAME = 4;
+const BEFORE_ATTRIBUTE_VALUE = 5;
+const IN_VALUE_NO_QUOTES = 6;
+const IN_VALUE_SINGLE_QUOTES = 7;
+const IN_VALUE_DOUBLE_QUOTES = 8;
+const CLOSING_OPEN_TAG = 9;
+const OPENING_SPECIAL = 10;
+const OPENING_DOCTYPE = 11;
+const OPENING_NORMAL_COMMENT = 12;
+const NORMAL_COMMENT_START = 13;
+const IN_NORMAL_COMMENT = 14;
+const IN_SHORT_COMMENT = 15;
+const CLOSING_NORMAL_COMMENT = 16;
+const CLOSING_NORMAL_COMMENT_2 = 17;
+const CLOSING_TAG = 18;
 
 // Special characters
 const EXCLAMATION = 33; // !
@@ -94,7 +96,7 @@ export function createParser(
 		return shouldPause;
 	}
 
-	function isAlpha(c: number) {
+	function isASCIIAlpha(c: number) {
 		return (
 			(c >= CAPITAL_A && c <= CAPITAL_Z) ||
 			(c >= LOWERCASE_A && c <= LOWERCASE_Z)
@@ -124,7 +126,7 @@ export function createParser(
 						} else {
 							state = TEXT; // < - Not a closing tag, go back to text
 						}
-					} else if (isAlpha(char)) {
+					} else if (isASCIIAlpha(char)) {
 						// Only A-Z and a-z are valid start to tag names in HTML5
 						name = String.fromCharCode(char | 0x20); // Lowercase
 						state = OPENING_TAG; // <name
@@ -142,20 +144,20 @@ export function createParser(
 					}
 					break;
 				case OPENING_TAG:
-					if (isWhitespace(char)) {
-						state = AFTER_OPENING_TAG; // <name   >
-					} else if (char === CLOSE_NODE) {
+					if (char === CLOSE_NODE) {
 						state = TEXT; // <name>
 
 						shouldPause = emitOpenTag(name, false);
 						name = '';
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <name/
+					} else if (isWhitespace(char)) {
+						state = BEFORE_ATTRIBUTE_NAME; // <name   >
 					} else {
 						name += String.fromCharCode(char | 0x20); // Lowercase
 					}
 					break;
-				case AFTER_OPENING_TAG:
+				case BEFORE_ATTRIBUTE_NAME:
 					if (char === CLOSE_NODE) {
 						state = TEXT; // <name   >
 
@@ -163,11 +165,33 @@ export function createParser(
 						name = '';
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <name   /
-					} else if (char === SINGLE_QUOTE) {
+					} else if (isWhitespace(char)) {
+						// Do nothing and skip whitespace
+					} else {
+						state = IN_ATTRIBUTE_NAME; // <name xxx
+					}
+					break;
+				case IN_ATTRIBUTE_NAME:
+					if (char === CLOSE_NODE) {
+						state = TEXT; // <name xxx>
+
+						shouldPause = emitOpenTag(name, false);
+						name = '';
+					} else if (char === SLASH) {
+						state = CLOSING_OPEN_TAG; // <name xxx/
+					} else if (isWhitespace(char)) {
+						state = BEFORE_ATTRIBUTE_NAME; // <name xxx ...
+					} else if (char === EQUAL) {
+						state = BEFORE_ATTRIBUTE_VALUE; // <name xxx=
+					}
+					break;
+				case BEFORE_ATTRIBUTE_VALUE:
+					if (char === SINGLE_QUOTE) {
 						state = IN_VALUE_SINGLE_QUOTES;
 					} else if (char === DOUBLE_QUOTE) {
 						state = IN_VALUE_DOUBLE_QUOTES;
 					} else if (!isWhitespace(char)) {
+						i--; // Re-process the character
 						state = IN_VALUE_NO_QUOTES;
 					}
 					break;
@@ -179,20 +203,18 @@ export function createParser(
 						name = '';
 					} else if (char === SLASH) {
 						state = CLOSING_OPEN_TAG; // <div xxx/
-					} else if (char === EQUAL) {
-						state = AFTER_OPENING_TAG; /// <div xxx=
 					} else if (isWhitespace(char)) {
-						state = AFTER_OPENING_TAG;
+						state = BEFORE_ATTRIBUTE_NAME; // <div xxx=xxx ...
 					}
 					break;
 				case IN_VALUE_SINGLE_QUOTES:
 					if (char === SINGLE_QUOTE) {
-						state = AFTER_OPENING_TAG; // <div xxx='yyy'>
+						state = BEFORE_ATTRIBUTE_NAME; // <div xxx='yyy'>
 					}
 					break;
 				case IN_VALUE_DOUBLE_QUOTES:
 					if (char === DOUBLE_QUOTE) {
-						state = AFTER_OPENING_TAG; // <div xxx="yyy">
+						state = BEFORE_ATTRIBUTE_NAME; // <div xxx="yyy">
 					}
 					break;
 				case CLOSING_OPEN_TAG:
@@ -202,7 +224,7 @@ export function createParser(
 						shouldPause = emitOpenTag(name, true);
 						name = '';
 					} else {
-						state = AFTER_OPENING_TAG; // <name /...>
+						state = BEFORE_ATTRIBUTE_NAME; // <name /...>
 						i--; // Re-process the character
 					}
 					break;
@@ -278,7 +300,7 @@ export function createParser(
 							} else {
 								state = TEXT; // </name> but not for the script or style tag
 							}
-						} else if (isAlpha(char)) {
+						} else if (isASCIIAlpha(char)) {
 							name += String.fromCharCode(char | 0x20); // Lowercase
 						} else {
 							state = TEXT; // </scrXXX or </styXXX
